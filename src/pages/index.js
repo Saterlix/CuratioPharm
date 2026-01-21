@@ -1,0 +1,16 @@
+export { default as Navbar } from './Navbar';
+export { default as Footer } from './Footer';
+export { default as HomePage } from './HomePage';
+export { default as AboutPage } from './AboutPage';
+export { default as ProductsPage } from './ProductsPage';
+export { default as DeliveryPage } from './DeliveryPage';
+export { default as ContactsPage } from './ContactsPage';
+export { default as LoginPage } from './LoginPage';
+export { default as CabinetPage } from './CabinetPage';
+export { default as CooperationPage } from './CooperationPage';
+export { default as AdminPage } from './AdminPage';
+export { default as AdminLoginPage } from './AdminLoginPage';
+export { default as ProductCatalogPage } from './ProductCatalogPage';
+export { default as ShoppingCartPage } from './ShoppingCartPage';
+export { default as OrderHistoryPage } from './OrderHistoryPage';
+
