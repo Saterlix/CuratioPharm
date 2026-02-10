@@ -9,7 +9,7 @@ const { Pool } = pg;
 const app = express();
 
 // --- ENV ---
-const JWT_SECRET = process.env.JWT_SECRET || 'CtP2024@Secure#Key$Random!987XyZ';
+const JWT_SECRET = process.env.JWT_SECRET || 'CtP2024@SecureKeyRandom987XyZ';
 const ADMIN_SECRET_URL = process.env.ADMIN_SECRET_URL || 'cp-admin-2024';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'AdminAccess@2024';
 const DATABASE_URL = process.env.DATABASE_URL;
