@@ -1,13 +1,12 @@
 import axios from 'axios';
 
-// 1. Адрес сервера: читаем из VITE_API_BASE_URL или по умолчанию 3001
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006/api';
+// API URL: same domain on Vercel, or localhost in dev
+const API_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
     baseURL: API_URL,
     headers: {
-        'Content-Type': 'application/json',
-        'Bypass-Tunnel-Reminder': 'true'
+        'Content-Type': 'application/json'
     }
 });
 
