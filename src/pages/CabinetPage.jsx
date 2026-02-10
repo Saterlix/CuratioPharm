@@ -430,6 +430,9 @@ const CabinetPage = () => {
                             <div>
                                 <h1>Добро пожаловать, {profile.name}!</h1>
                                 <p>{profile.company}</p>
+                                <small style={{ opacity: 0.7, fontSize: '0.8em' }}>
+                                    API: {import.meta.env.VITE_API_BASE_URL || 'Localhost (Default)'}
+                                </small>
                             </div>
                             <button onClick={handleLogout} className="logout-btn">
                                 <LogOut size={18} />
