@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 1. Адрес сервера: читаем из VITE_API_BASE_URL или по умолчанию 3001
-const API_URL = 'https://roundly-unmedicinal-annalise.ngrok-free.dev/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -102,12 +102,12 @@ export const authAPI = {
         try {
             // Важно: этот URL должен совпадать с тем, что в backend/.env или init-db
             // По умолчанию: cp-admin-2024. Можно переопределить через VITE_ADMIN_SECRET_URL
-            const secretUrl = import.meta.env.VITE_ADMIN_SECRET_URL || 'cp-admin-2024'; 
-            const response = await api.post(`/admin/${secretUrl}/login`, { 
+            const secretUrl = import.meta.env.VITE_ADMIN_SECRET_URL || 'cp-admin-2024';
+            const response = await api.post(`/admin/${secretUrl}/login`, {
                 login,
                 password
             });
-            
+
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -242,6 +242,37 @@ export const productsAPI = {
     // Получить товары по категории
     async getProductsByCategory(category) {
         const response = await api.get(`/products/category/${category}`);
+        return response.data;
+    }
+};
+
+export const cabinetAPI = {
+    // Взаиморасчеты
+    async getDebts() {
+        const response = await api.get('/cabinet/debts');
+        return response.data;
+    },
+
+    // Документы
+    async getDocuments(params) {
+        const response = await api.get('/cabinet/documents', { params });
+        return response.data;
+    },
+
+    // Претензии
+    async getClaims() {
+        const response = await api.get('/cabinet/claims');
+        return response.data;
+    },
+
+    async createClaim(data) {
+        const response = await api.post('/cabinet/claims', data);
+        return response.data;
+    },
+
+    // Сертификаты
+    async getCertificates(productId) {
+        const response = await api.get('/cabinet/certificates', { params: { productId } });
         return response.data;
     }
 };

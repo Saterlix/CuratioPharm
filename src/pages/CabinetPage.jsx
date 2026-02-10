@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, themes } from '../context/ThemeContext';
-import { ordersAPI, cartAPI } from '../services/api';
+import { ordersAPI, cartAPI, cabinetAPI } from '../services/api';
 import {
     User,
     LogOut,
@@ -35,7 +35,7 @@ const CabinetPage = () => {
     const navigate = useNavigate();
     const [showSettings, setShowSettings] = useState(false);
     const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
-    
+
     // State for active section modal
     const [activeSection, setActiveSection] = useState(null);
 
@@ -50,6 +50,12 @@ const CabinetPage = () => {
     // Real data state
     const [orders, setOrders] = useState([]);
     const [cart, setCart] = useState({ items: [], total: 0, totalItems: 0 });
+
+    // Cabinet Data State
+    const [debts, setDebts] = useState(null);
+    const [documents, setDocuments] = useState([]);
+    const [claims, setClaims] = useState([]);
+    const [certificates, setCertificates] = useState([]);
     const [loadingData, setLoadingData] = useState(false);
 
     // Load profile data when user changes
@@ -91,6 +97,70 @@ const CabinetPage = () => {
             }
         } catch (error) {
             console.error('Error loading cart:', error);
+        }
+    };
+
+    // Load data based on active section
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        if (activeSection === 'debts') loadDebts();
+        else if (activeSection === 'documents') loadDocuments();
+        else if (activeSection === 'claims') loadClaims();
+        else if (activeSection === 'certificates') loadCertificates();
+    }, [activeSection, isAuthenticated]);
+
+    const loadDebts = async () => {
+        setLoadingData(true);
+        try {
+            const data = await cabinetAPI.getDebts();
+            if (data.success) setDebts(data.debt);
+        } catch (e) { console.error(e); }
+        setLoadingData(false);
+    };
+
+    const loadDocuments = async () => {
+        setLoadingData(true);
+        try {
+            const data = await cabinetAPI.getDocuments();
+            if (data.success) setDocuments(data.documents);
+        } catch (e) { console.error(e); }
+        setLoadingData(false);
+    };
+
+    const loadClaims = async () => {
+        setLoadingData(true);
+        try {
+            const data = await cabinetAPI.getClaims();
+            if (data.success) setClaims(data.claims);
+        } catch (e) { console.error(e); }
+        setLoadingData(false);
+    };
+
+    const loadCertificates = async () => {
+        setLoadingData(true);
+        try {
+            const data = await cabinetAPI.getCertificates();
+            if (data.success) setCertificates(data.certificates);
+        } catch (e) { console.error(e); }
+        setLoadingData(false);
+    };
+
+    const handleCreateClaim = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const claimData = {
+            type: formData.get('type'),
+            description: formData.get('description'),
+            orderId: formData.get('orderId')
+        };
+        try {
+            await cabinetAPI.createClaim(claimData);
+            alert('Претензия успешно отправлена');
+            loadClaims(); // reload
+            e.target.reset();
+        } catch (error) {
+            alert('Ошибка при отправке претензии');
         }
     };
 
@@ -153,35 +223,90 @@ const CabinetPage = () => {
                 );
             case 'documents':
                 return (
-                    <div className="modal-list">
-                        <div className="empty-state">
-                            <p>Документы будут доступны после интеграции с 1С</p>
-                        </div>
+                    <div className="modal-table-container">
+                        {loadingData ? <div className="loading"><Loader2 className="spin" /> Загрузка...</div> : (
+                            <table className="modal-table">
+                                <thead>
+                                    <tr>
+                                        <th>Номер</th>
+                                        <th>Тип</th>
+                                        <th>Дата</th>
+                                        <th>Сумма</th>
+                                        <th>Статус</th>
+                                        <th>Скачать</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {documents.length === 0 ? (
+                                        <tr><td colSpan="6" className="empty-state">Документов нет</td></tr>
+                                    ) : (
+                                        documents.map(doc => (
+                                            <tr key={doc.id}>
+                                                <td>{doc.number}</td>
+                                                <td>
+                                                    {doc.type === 'invoice' && 'Счет-фактура'}
+                                                    {doc.type === 'waybill' && 'Накладная'}
+                                                    {doc.type === 'act' && 'Акт сверки'}
+                                                </td>
+                                                <td>{new Date(doc.date).toLocaleDateString('ru-RU')}</td>
+                                                <td>{Number(doc.amount).toLocaleString()} сум</td>
+                                                <td>
+                                                    <span className={`status-badge ${doc.status === 'paid' ? 'success' : 'warning'}`}>
+                                                        {doc.status === 'paid' ? 'Оплачен' : 'Не оплачен'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button className="icon-btn" onClick={() => window.open(doc.fileUrl || '#', '_blank')}>
+                                                        <FileText size={18} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 );
             case 'debts':
                 return (
                     <div className="debt-dashboard">
-                        <div className="debt-card danger">
-                            <h3>Текущий долг</h3>
-                            <p className="amount">0 сум</p>
-                        </div>
-                        <div className="debt-card">
-                            <h3>Кредитный лимит</h3>
-                            <p className="amount">0 сум</p>
-                        </div>
-                        <div className="debt-info">
-                            <p><strong>Просрочено:</strong> 0 сум</p>
-                            <p><strong>Примечание:</strong> Информация о задолженности будет доступна после интеграции с 1С</p>
-                        </div>
+                        {loadingData ? <div className="loading">Загрузка...</div> : (
+                            <>
+                                <div className={`debt-card ${Number(debts?.overdueAmount) > 0 ? 'danger' : 'success'}`}>
+                                    <h3>Текущий долг</h3>
+                                    <p className="amount">{Number(debts?.amount || 0).toLocaleString()} {debts?.currency || 'UZS'}</p>
+                                </div>
+                                <div className="debt-card">
+                                    <h3>Кредитный лимит</h3>
+                                    <p className="amount">{Number(debts?.creditLimit || 0).toLocaleString()} {debts?.currency || 'UZS'}</p>
+                                </div>
+                                <div className="debt-info">
+                                    <p><strong>Просрочено:</strong> <span className="danger-text">{Number(debts?.overdueAmount || 0).toLocaleString()} {debts?.currency || 'UZS'}</span></p>
+                                    <p><strong>Дата обновления:</strong> {debts?.updatedAt ? new Date(debts.updatedAt).toLocaleString() : 'Нет данных'}</p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 );
             case 'certificates':
                 return (
                     <div className="modal-list">
-                        <div className="empty-state">
-                            <p>Сертификаты будут доступны после интеграции с 1С</p>
-                        </div>
+                        {certificates.length === 0 ? (
+                            <div className="empty-state">Сертификатов нет</div>
+                        ) : (
+                            certificates.map(cert => (
+                                <div key={cert.id} className="modal-list-item">
+                                    <div className="item-info">
+                                        <h4>{cert.name}</h4>
+                                        <p>Срок действия: {cert.expiration_date}</p>
+                                    </div>
+                                    <button className="icon-btn" onClick={() => window.open(cert.file_url, '_blank')}>
+                                        <FileCheck size={20} /> Скачать
+                                    </button>
+                                </div>
+                            ))
+                        )}
                     </div>
                 );
             case 'catalog':
@@ -229,20 +354,44 @@ const CabinetPage = () => {
                 );
             case 'claims':
                 return (
-                    <div className="claims-form">
-                        <div className="form-group">
-                            <label>Тип претензии</label>
-                            <select><option>Недовоз</option><option>Брак</option><option>Пересорт</option></select>
+                    <div className="claims-container">
+                        <h3>Оформить претензию</h3>
+                        <form className="claims-form" onSubmit={handleCreateClaim}>
+                            <div className="form-group">
+                                <label>Тип претензии</label>
+                                <select name="type">
+                                    <option value="shortage">Недовоз (Недовложение)</option>
+                                    <option value="damage">Брак (Бой)</option>
+                                    <option value="quality">Качество</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Номер накладной / Заказа</label>
+                                <input name="orderId" type="text" placeholder="Введите номер" />
+                            </div>
+                            <div className="form-group">
+                                <label>Описание проблемы</label>
+                                <textarea name="description" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" className="submit-claim-btn" disabled={loadingData}>Отправить претензию</button>
+                        </form>
+
+                        <h3>История претензий</h3>
+                        <div className="modal-list">
+                            {claims.length === 0 ? <p className="empty-state">Претензий нет</p> : claims.map(c => (
+                                <div key={c.id} className="modal-list-item claim-item">
+                                    <div>
+                                        <h4>{c.type === 'shortage' ? 'Недовоз' : c.type === 'damage' ? 'Брак' : 'Претензия'}</h4>
+                                        <p className="claim-desc">{c.description}</p>
+                                        <small>{new Date(c.createdAt).toLocaleDateString()}</small>
+                                    </div>
+                                    <span className={`status-badge ${c.status === 'new' ? 'warning' : 'success'}`}>
+                                        {c.status === 'new' ? 'На рассмотрении' : c.status}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
-                        <div className="form-group">
-                            <label>Номер накладной</label>
-                            <input type="text" placeholder="Введите номер" />
-                        </div>
-                        <div className="form-group">
-                            <label>Комментарий</label>
-                            <textarea rows="3"></textarea>
-                        </div>
-                        <button className="submit-claim-btn">Отправить претензию</button>
                     </div>
                 );
             default:
@@ -307,8 +456,8 @@ const CabinetPage = () => {
                                 <p>Текущий заказ</p>
                             </div>
 
-                             {/* Orders */}
-                             <div className="cabinet-card" onClick={() => setActiveSection('orders')}>
+                            {/* Orders */}
+                            <div className="cabinet-card" onClick={() => setActiveSection('orders')}>
                                 <div className="cabinet-card-icon"><Package size={32} /></div>
                                 <h3>Мои заказы</h3>
                                 <p>История и статус заказов</p>
