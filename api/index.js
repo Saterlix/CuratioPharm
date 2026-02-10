@@ -61,7 +61,8 @@ const requireActiveAccount = async (req, res, next) => {
 };
 
 // --- HEALTH ---
-app.get('/api/health', (req, res) => res.json({ status: 'ok', db: !!DATABASE_URL }));
+app.get('/health', (req, res) => res.json({ status: 'ok', path: 'root-health', db: !!DATABASE_URL }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', path: 'api-health', db: !!DATABASE_URL }));
 
 // ===================== AUTH =====================
 app.post('/api/auth/login', async (req, res) => {
@@ -554,7 +555,14 @@ app.get('/api/init-db', async (req, res) => {
 
 // 404 catch-all
 app.all('/api/*', (req, res) => {
-    res.status(404).json({ error: 'Endpoint не найден' });
+    res.status(404).json({
+        error: 'Endpoint не найден',
+        debug: {
+            url: req.url,
+            originalUrl: req.originalUrl,
+            params: req.params
+        }
+    });
 });
 
 export default app;
