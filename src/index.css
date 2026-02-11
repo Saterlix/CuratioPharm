@@ -1,0 +1,179 @@
+/* === GLOBAL CONTAINMENT: Nothing goes beyond viewport === */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* Force ALL elements to respect container boundaries */
+img,
+video,
+iframe,
+canvas,
+svg,
+embed,
+object {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Prevent text from causing overflow */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+li,
+td,
+th,
+label,
+button {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+/* Tables must scroll, not overflow */
+table {
+    max-width: 100%;
+}
+
+/* Inputs must not exceed container */
+input,
+textarea,
+select {
+    max-width: 100%;
+}
+
+/* Ultra-small screen overrides (320px) */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 12px !important;
+    }
+
+    .section {
+        padding: 40px 0 !important;
+    }
+
+    .section-title {
+        font-size: 1.5rem !important;
+    }
+
+    .section-subtitle {
+        font-size: 0.95rem !important;
+        margin-bottom: 30px !important;
+    }
+
+    .page-header {
+        padding: 40px 0 30px !important;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem !important;
+    }
+
+    .page-header p {
+        font-size: 0.95rem !important;
+    }
+
+    .btn-primary {
+        padding: 12px 20px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Stats even tighter */
+    .stat-number {
+        font-size: 1.8rem !important;
+    }
+
+    .stat-label {
+        font-size: 0.85rem !important;
+    }
+
+    /* Carousel ultra-compact */
+    .carousel-slide {
+        padding: 24px 16px !important;
+        gap: 20px !important;
+    }
+
+    .slide-icon {
+        width: 64px !important;
+        height: 64px !important;
+    }
+
+    .slide-content h3 {
+        font-size: 1.3rem !important;
+    }
+
+    .slide-content p {
+        font-size: 0.9rem !important;
+    }
+
+    /* Storage/About/Delivery cards compact */
+    .storage-card,
+    .delivery-card,
+    .about-card,
+    .product-card,
+    .value-card,
+    .delivery-feature {
+        padding: 20px 16px !important;
+    }
+
+    .storage-icon,
+    .delivery-icon {
+        width: 56px !important;
+        height: 56px !important;
+    }
+
+    .icon-wrapper {
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    /* Delivery demo */
+    .delivery-badge-large {
+        padding: 10px 16px !important;
+        font-size: 0.9rem !important;
+    }
+
+    .delivery-demo-content h2 {
+        font-size: 1.5rem !important;
+    }
+
+    .delivery-features li {
+        font-size: 0.9rem !important;
+    }
+
+    .timeline-icon {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    .delivery-timeline {
+        padding: 24px !important;
+    }
+
+    /* Contacts form */
+    .contact-form-full input,
+    .contact-form-full select,
+    .contact-form-full textarea {
+        padding: 10px 12px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Map smaller on tiny screens */
+    .map-container iframe {
+        height: 250px !important;
+    }
+}

@@ -123,16 +123,27 @@ html {
     font-size: 1.1rem;
 }
 
+/* Main content - scrolls OVER the fixed hero animation */
+main {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-color, #f8fafc);
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    overflow: hidden;
+    /* Prevent horizontal scroll from 100vw */
+}
+
 /* Statistics Section */
 .stats-section {
     background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
-    padding: 40px 0;
+    padding: 24px 0;
 }
 
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 40px;
+    gap: 24px;
     text-align: center;
 }
 
@@ -142,14 +153,14 @@ html {
 
 .stat-number {
     display: block;
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .stat-label {
-    font-size: 1rem;
+    font-size: 0.9rem;
     opacity: 0.9;
     font-weight: 500;
 }
@@ -207,7 +218,7 @@ html {
     overflow: hidden;
     border-radius: 20px;
     background: #f8fafc;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
 }
 
 .carousel-track {
@@ -269,10 +280,137 @@ html {
 }
 
 @media (max-width: 768px) {
+
+    /* Global Container & Section Fixes */
+    .container {
+        padding: 0 16px;
+    }
+
+    .section {
+        padding: 60px 0;
+    }
+
+    .page-header {
+        padding: 60px 0 40px;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+    }
+
+    /* Grid Fixes - Stack single column by default */
+    .about-grid,
+    .values-grid,
+    .licenses-grid,
+    .advantages-grid,
+    .delivery-grid,
+    .delivery-page-grid,
+    .storage-grid,
+    .products-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    /* Stats - Flex Wrap on mobile for safety */
+    .stats-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 16px !important;
+    }
+
+    .stat-item {
+        flex: 1 1 45%;
+        min-width: 130px;
+        max-width: 50%;
+        margin-bottom: 8px;
+    }
+
+    .stat-number {
+        font-size: 2.25rem;
+    }
+
+    /* Split Sections - Stack vertically */
+    .delivery-demo,
+    .about-full-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    /* Carousel */
     .carousel-slide {
         flex-direction: column;
         text-align: center;
         padding: 40px 20px;
+    }
+
+    .slide-icon {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+        margin-bottom: 0;
+    }
+
+    /* Specific Component Adjustments */
+    .delivery-demo-content h2 {
+        font-size: 2rem;
+    }
+
+    .timeline-item {
+        gap: 16px;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .timeline-line {
+        margin-left: 19px;
+    }
+
+    /* Product Page Specific */
+    .product-full-card {
+        flex-direction: column;
+        padding: 24px;
+        gap: 24px;
+    }
+
+    .product-full-card .product-icon {
+        margin: 0 auto;
+    }
+
+    .product-content ul {
+        grid-template-columns: 1fr;
+    }
+
+    /* Homepage Cards */
+    .storage-card,
+    .delivery-card,
+    .about-card,
+    .product-card {
+        padding: 30px 20px;
+    }
+
+    .storage-icon,
+    .delivery-icon,
+    .icon-wrapper {
+        width: 64px;
+        height: 64px;
+    }
+
+    .advantage-item {
+        flex-direction: row;
+        /* Keep row */
+        align-items: center;
+        text-align: left;
     }
 }
 
@@ -741,4 +879,135 @@ html {
 .timeline-text span {
     color: #64748b;
     font-size: 0.9rem;
+}
+
+/* Contacts Page */
+.contacts-page-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.contact-info-full h3,
+.contact-form-full h3 {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+    color: #0f172a;
+}
+
+.contact-block {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.contact-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.contact-block h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #0f172a;
+}
+
+.contact-block p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.form-description {
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.contact-form-full .form-group {
+    margin-bottom: 16px;
+}
+
+.contact-form-full label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.contact-form-full input,
+.contact-form-full select,
+.contact-form-full textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #f8fafc;
+    color: #0f172a;
+    transition: all 0.2s;
+}
+
+.contact-form-full input:focus,
+.contact-form-full select:focus,
+.contact-form-full textarea:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    background: white;
+}
+
+.map-container {
+    margin-bottom: 24px;
+}
+
+.map-info {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.map-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.map-info-item svg {
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .contacts-page-grid {
+        grid-template-columns: 1fr !important;
+        gap: 40px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .map-container iframe {
+        height: 300px;
+    }
 }

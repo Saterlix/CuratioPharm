@@ -10,6 +10,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 .navbar-spacer {
     display: block;
     width: 100%;
+    /* Match hero bottom edge color */
 }
 
 /* Fixed Navbar с видео */
@@ -21,8 +22,8 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     z-index: 1000;
     background: transparent;
     color: white;
-    overflow: hidden;
-    will-change: height;
+    /* overflow: hidden; REMOVED to allow mobile menu to slide out */
+    transition: background 0.3s ease, height 0.3s ease;
 
     /* Hero режим - большой навбар с видео */
     &.hero-navbar {
@@ -35,47 +36,165 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     }
 
     &.scrolled {
-        background: $nav-bg-scrolled;
+        background: var(--nav-bg-scrolled, rgba(0, 0, 0, 0.85));
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         box-shadow: $nav-shadow;
 
-        .navbar-logo .logo-text,
+        .navbar-logo .logo-text {
+            color: var(--nav-text, #ffffff);
+        }
+
         .navbar-logo .logo-highlight {
-            color: white;
+            color: var(--primary, #10b981);
         }
 
         .navbar-links a {
-            color: white;
+            color: var(--nav-text, #ffffff);
 
             &:hover {
-                color: rgba(255, 255, 255, 0.8);
+                color: var(--nav-link-hover, rgba(255, 255, 255, 0.8));
             }
+        }
+
+        .cta-button {
+            background: var(--primary, #10b981);
+            color: var(--text-on-primary, #ffffff);
+        }
+
+        .hamburger span {
+            background: var(--nav-text, #ffffff);
         }
     }
 }
 
-/* Video внутри навбара */
-.navbar-video {
+/* Text Stroke Animation */
+.navbar-animated-bg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
     z-index: 1;
     transition: opacity 0.3s ease;
+    background: radial-gradient(circle at 50% 50%, #0f766e 0%, #064e3b 60%, #022c22 100%);
+    overflow: hidden;
+}
+
+/* Container */
+.hero-logo-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.logo-wrapper {
+    position: relative;
+    width: 350px;
+    max-width: 80vw;
+    animation: logoFloat 6s ease-in-out infinite;
+}
+
+.hero-logo-img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.4));
+    display: block;
+}
+
+/* Floating Leaf Particles */
+.leaf-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.leaf-particle {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+    opacity: 0.6;
+    animation: leafFloat linear infinite;
+    box-shadow: 0 0 5px rgba(22, 163, 74, 0.4);
+}
+
+/* Different Leaf Shapes */
+.leaf-0 {
+    border-radius: 0 50% 0 50%;
+}
+
+.leaf-1 {
+    border-radius: 50% 0 50% 0;
+}
+
+.leaf-2 {
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    background: #facc15;
+    /* Golden spore */
+    opacity: 0.8;
+}
+
+@keyframes leafFloat {
+    0% {
+        transform: translateY(100vh) rotate(0deg) translateX(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.8;
+    }
+
+    33% {
+        transform: translateY(60vh) rotate(120deg) translateX(30px);
+    }
+
+    66% {
+        transform: translateY(30vh) rotate(240deg) translateX(-30px);
+    }
+
+    90% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(-10vh) rotate(360deg) translateX(0);
+        opacity: 0;
+    }
+}
+
+
+/* Grid Overlay */
+.grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at center, transparent 40%, black 100%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .navbar-video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(0, 0, 0, 0.4) 100%);
-    z-index: 2;
-    transition: opacity 0.3s ease;
+    display: none;
 }
 
 /* Hero Content внутри навбара */
@@ -108,8 +227,8 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
         padding: 15px 40px;
         font-size: 1.1rem;
         font-weight: 600;
-        background: $nav-highlight;
-        color: white;
+        background: var(--primary, #10b981);
+        color: var(--text-on-primary, #ffffff);
         border: none;
         border-radius: 50px;
         cursor: pointer;
@@ -117,7 +236,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
         text-decoration: none;
 
         &:hover {
-            background: darken($nav-highlight, 10%);
+            background: var(--primary-dark, #0f766e);
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
         }
@@ -158,7 +277,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     align-items: center;
 
     a {
-        color: rgb(255, 255, 255);
+        color: var(--nav-text, #ffffff);
         text-decoration: none;
         font-weight: 500;
         transition: color 0.3s ease;
@@ -171,7 +290,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
             left: 0;
             width: 0;
             height: 2px;
-            background: $nav-highlight;
+            background: var(--primary, #10b981);
             transition: width 0.3s ease;
         }
 
@@ -193,16 +312,17 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 
 .cta-button {
     padding: 10px 25px;
-    background: $nav-highlight;
-    color: white;
+    background: var(--primary, #10b981);
+    color: var(--text-on-primary, #ffffff);
     border: none;
     border-radius: 25px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
 
     &:hover {
-        background: color.adjust($nav-highlight, $lightness: -10%);
+        background: var(--primary-dark, #0f766e);
         transform: translateY(-2px);
     }
 
@@ -272,23 +392,46 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 
     .navbar-links {
         position: fixed;
-        top: 70px;
+        top: 60px;
+        /* Match navbar height */
         left: 0;
         width: 100%;
+        height: calc(100vh - 60px);
         flex-direction: column;
-        background: rgba(255, 255, 255, 0.295);
-        padding: 20px;
-        gap: 1rem;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        background: var(--nav-bg-scrolled, rgba(0, 0, 0, 0.95));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 40px 20px;
+        gap: 2rem;
+        transform: translateX(100%);
+        /* Slide from right usually better */
+        transition: transform 0.3s ease, visibility 0s linear 0.3s;
+        overflow-y: auto;
+        z-index: 999;
+        /* Ensure high z-index */
+        visibility: hidden;
+        /* Hide from layout/scroll when closed */
 
         &.active {
             transform: translateX(0);
+            visibility: visible;
+            transition: transform 0.3s ease, visibility 0s linear 0s;
+            /* Show immediately */
+        }
+
+        a {
+            color: var(--nav-text, #ffffff) !important;
+            font-size: 1.2rem;
         }
 
         .mobile-only {
             display: block;
         }
+    }
+
+    .logo-wrapper {
+        width: 250px;
+        /* Smaller main logo on tablet */
     }
 
     .cta-button.desktop-only {
@@ -303,42 +446,73 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 
 @media (max-width: 480px) {
     .navbar {
-        padding: 0 12px;
+        padding: 0 10px;
+        /* Minimal padding */
     }
 
     .navbar-container {
         height: 60px;
+        padding: 0 10px;
     }
 
-    .logo {
+    .navbar-logo {
         font-size: 1.2rem;
     }
 
-    .logo span {
-        font-size: 1.2rem;
+    .logo-wrapper {
+        width: 140px;
+        /* STRICT LIMIT: fit within 360px with menu */
+        max-width: 50vw;
     }
 
     .navbar-links {
         top: 60px;
-        padding: 16px;
-        gap: 12px;
-    }
+        padding: 20px 15px;
+        gap: 1.5rem;
 
-    .navbar-links a {
-        font-size: 0.95rem;
-        padding: 10px 0;
-    }
-
-    .hero-content h1 {
-        font-size: 1.8rem;
-    }
-
-    .hero-content p {
-        font-size: 0.95rem;
+        a {
+            font-size: 1.1rem;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
     }
 
     .cta-button {
-        padding: 10px 20px;
-        font-size: 0.9rem;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+
+    .hamburger {
+        scale: 0.9;
+        /* Slightly smaller icon */
+    }
+}
+
+/* Ultra-narrow screens (320px) */
+@media (max-width: 360px) {
+    .navbar-container {
+        padding: 0 10px;
+    }
+
+    .navbar-logo .logo-text {
+        font-size: 1.1rem !important;
+    }
+
+    .hero-content h1 {
+        font-size: 1.8rem !important;
+    }
+
+    .hero-content p {
+        font-size: 0.95rem !important;
+    }
+
+    .hero-cta .cta-button {
+        padding: 10px 20px !important;
+        font-size: 0.85rem !important;
+    }
+
+    .navbar-links {
+        padding: 30px 16px;
     }
 }

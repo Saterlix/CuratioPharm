@@ -125,6 +125,177 @@
     font-weight: 600;
 }
 
+/* Dashboard Summary Widgets */
+.dashboard-summary {
+    padding: 0;
+    margin-top: -24px;
+    position: relative;
+    z-index: 10;
+}
+
+.summary-widgets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.summary-widget {
+    background: var(--bg-card, white);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.summary-widget:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.widget-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.widget-debt .widget-icon {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706;
+}
+
+.widget-orders .widget-icon {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #2563eb;
+}
+
+.widget-cart .widget-icon {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    color: #10b981;
+}
+
+.widget-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.widget-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    font-weight: 500;
+}
+
+.widget-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a);
+}
+
+.widget-arrow {
+    color: var(--text-muted, #94a3b8);
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .summary-widgets {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-summary {
+        margin-top: -16px;
+    }
+
+    .cabinet-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 columns as requested */
+        gap: 12px;
+    }
+
+    .cabinet-card {
+        padding: 16px;
+    }
+
+    .cabinet-card h3 {
+        font-size: 1rem;
+        /* Smaller font for 2-col layout */
+    }
+
+    .cabinet-card-icon {
+        width: 48px;
+        /* Smaller icons */
+        height: 48px;
+        margin-bottom: 12px;
+    }
+
+    .cabinet-card-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .cabinet-welcome {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .logout-btn {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Settings Modal Mobile */
+    .settings-modal {
+        max-height: 95vh;
+        height: 95vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settings-content {
+        flex-direction: column;
+        height: auto;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .settings-tab {
+        width: auto;
+        white-space: nowrap;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .settings-main {
+        padding: 20px;
+    }
+
+    .settings-header {
+        padding: 16px 20px;
+    }
+}
+
 /* Settings Modal */
 .settings-overlay {
     position: fixed;

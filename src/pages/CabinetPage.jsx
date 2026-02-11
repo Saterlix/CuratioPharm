@@ -24,7 +24,9 @@ import {
     CreditCard,
     FileCheck,
     AlertCircle,
-    Loader2
+    Loader2,
+    BarChart3,
+    TrendingUp
 } from 'lucide-react';
 import Navbar from './Navbar';
 import './CabinetPage.css';
@@ -438,6 +440,47 @@ const CabinetPage = () => {
                                 <LogOut size={18} />
                                 Выйти
                             </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="dashboard-summary">
+                    <div className="container">
+                        <div className="summary-widgets">
+                            <div className="summary-widget widget-debt" onClick={() => setActiveSection('debts')}>
+                                <div className="widget-icon">
+                                    <CreditCard size={24} />
+                                </div>
+                                <div className="widget-info">
+                                    <span className="widget-label">Задолженность</span>
+                                    <span className="widget-value">
+                                        {debts ? `${Number(debts.amount || 0).toLocaleString()} ${debts.currency || 'UZS'}` : '—'}
+                                    </span>
+                                </div>
+                                <TrendingUp size={18} className="widget-arrow" />
+                            </div>
+
+                            <div className="summary-widget widget-orders" onClick={() => setActiveSection('orders')}>
+                                <div className="widget-icon">
+                                    <Package size={24} />
+                                </div>
+                                <div className="widget-info">
+                                    <span className="widget-label">Заказы</span>
+                                    <span className="widget-value">{orders.length} шт</span>
+                                </div>
+                                <BarChart3 size={18} className="widget-arrow" />
+                            </div>
+
+                            <div className="summary-widget widget-cart" onClick={() => navigate('/cart')}>
+                                <div className="widget-icon">
+                                    <ShoppingCart size={24} />
+                                </div>
+                                <div className="widget-info">
+                                    <span className="widget-label">Корзина</span>
+                                    <span className="widget-value">{cart.totalItems} позиций</span>
+                                </div>
+                                <ChevronRight size={18} className="widget-arrow" />
+                            </div>
                         </div>
                     </div>
                 </section>
