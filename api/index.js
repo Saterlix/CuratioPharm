@@ -40,19 +40,30 @@ const dbAll = async (sql, params = []) => { const r = await q(sql, params); retu
 
 // Test DB Endpoint
 app.get('/api/test-db', async (req, res) => {
+    const maskedUrl = DATABASE_URL ? DATABASE_URL.replace(/:[^:@]*@/, ':****@') : 'undefined';
     try {
         if (!DATABASE_URL) throw new Error('DATABASE_URL is not defined');
         const result = await pool.query('SELECT NOW() as now');
         res.json({
             status: 'ok',
             time: result.rows[0].now,
-            message: '✅ Connection to Neon DB successful!'
+            message: '✅ Connection to Neon DB successful!',
+            debug: {
+                usingUrl: maskedUrl,
+                envUrl: process.env.DATABASE_URL ? 'set' : 'unset',
+                nodeEnv: process.env.NODE_ENV
+            }
         });
     } catch (e) {
         res.status(500).json({
             status: 'error',
             message: '❌ Database connection failed',
-            error: e.message
+            error: e.message,
+            stack: e.stack,
+            debug: {
+                usingUrl: maskedUrl,
+                envUrl: process.env.DATABASE_URL ? 'set' : 'unset'
+            }
         });
     }
 });
