@@ -156,7 +156,7 @@ app.post('/api/admin/:secret/login', async (req, res) => {
 app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const totalPartners = await dbGet("SELECT COUNT(*) as count FROM users WHERE role = 'partner'");
-        const activePartners = await dbGet("SELECT COUNT(*) as count FROM users WHERE role = 'partner' AND is_active = 1");
+        const activePartners = await dbGet("SELECT COUNT(*) as count FROM users WHERE role = 'partner' AND is_active = true");
         const totalOrders = await dbGet('SELECT COUNT(*) as count FROM orders');
         const pendingOrders = await dbGet("SELECT COUNT(*) as count FROM orders WHERE status = 'pending'");
         const totalProducts = await dbGet('SELECT COUNT(*) as count FROM products');
@@ -195,7 +195,7 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
         const existing = await dbGet('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
         if (existing) return res.status(400).json({ error: 'Этот email уже используется' });
         const hash = await bcrypt.hash(password, 12);
-        await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active, created_by) VALUES (?, ?, 'partner', ?, ?, ?, 1, ?)",
+        await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active, created_by) VALUES (?, ?, 'partner', ?, ?, ?, true, ?)",
             [email.toLowerCase(), hash, companyName, contactPerson || null, phone || null, req.user.id]);
         res.json({ success: true, message: 'Партнёр создан' });
     } catch (e) { res.status(500).json({ error: 'Ошибка сервера' }); }
@@ -209,7 +209,7 @@ app.put('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
         if (companyName !== undefined) { updates.push('company_name = ?'); params.push(companyName); }
         if (contactPerson !== undefined) { updates.push('contact_person = ?'); params.push(contactPerson); }
         if (phone !== undefined) { updates.push('phone = ?'); params.push(phone); }
-        if (isActive !== undefined) { updates.push('is_active = ?'); params.push(isActive ? 1 : 0); }
+        if (isActive !== undefined) { updates.push('is_active = ?'); params.push(isActive === true || isActive === 'true'); }
         if (newPassword) { updates.push('password = ?'); params.push(await bcrypt.hash(newPassword, 12)); }
         if (updates.length === 0) return res.status(400).json({ error: 'Нет данных' });
 
@@ -224,7 +224,7 @@ app.put('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res
 
 app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        await dbRun('UPDATE users SET is_active = 0 WHERE id = ?', [req.params.id]);
+        await dbRun('UPDATE users SET is_active = false WHERE id = ?', [req.params.id]);
         res.json({ success: true, message: 'Деактивирован' });
     } catch (e) { res.status(500).json({ error: 'Ошибка сервера' }); }
 });
@@ -243,7 +243,7 @@ app.get('/api/admin/products', authenticateToken, requireAdmin, async (req, res)
 app.post('/api/admin/products', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, price, stock, manufacturer, category } = req.body;
-        await dbRun('INSERT INTO products (guid, name, price, stock, manufacturer, category, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
+        await dbRun('INSERT INTO products (guid, name, price, stock, manufacturer, category, is_active) VALUES (?, ?, ?, ?, ?, ?, true)',
             ['prod-' + Date.now(), name, price, stock, manufacturer, category]);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -254,7 +254,7 @@ app.put('/api/admin/products/:id', authenticateToken, requireAdmin, async (req, 
         const { id } = req.params;
         const { name, price, stock, is_active } = req.body;
         if (is_active !== undefined) {
-            await dbRun('UPDATE products SET is_active = ? WHERE id = ?', [is_active ? 1 : 0, id]);
+            await dbRun('UPDATE products SET is_active = ? WHERE id = ?', [is_active, id]);
         } else {
             await dbRun('UPDATE products SET name=?, price=?, stock=? WHERE id=?', [name, price, stock, id]);
         }
@@ -266,7 +266,7 @@ app.put('/api/admin/products/:id', authenticateToken, requireAdmin, async (req, 
 app.get('/api/products', async (req, res) => {
     try {
         const { category, search } = req.query;
-        let sql = 'SELECT id, guid, name, price, stock, manufacturer, category, description FROM products WHERE is_active = 1';
+        let sql = 'SELECT id, guid, name, price, stock, manufacturer, category, description FROM products WHERE is_active = true';
         const params = [];
         if (category) { sql += ' AND category = ?'; params.push(category); }
         if (search) { sql += ' AND (name ILIKE ? OR manufacturer ILIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
@@ -278,14 +278,14 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/category/:category', async (req, res) => {
     try {
-        const products = await dbAll('SELECT id, guid, name, price, stock, manufacturer, category, description FROM products WHERE category = ? AND is_active = 1 ORDER BY name', [req.params.category]);
+        const products = await dbAll('SELECT id, guid, name, price, stock, manufacturer, category, description FROM products WHERE category = ? AND is_active = true ORDER BY name', [req.params.category]);
         res.json({ success: true, products });
     } catch (e) { res.status(500).json({ error: 'Ошибка' }); }
 });
 
 app.get('/api/products/:id', async (req, res) => {
     try {
-        const product = await dbGet('SELECT * FROM products WHERE id = ? AND is_active = 1', [req.params.id]);
+        const product = await dbGet('SELECT * FROM products WHERE id = ? AND is_active = true', [req.params.id]);
         if (!product) return res.status(404).json({ error: 'Товар не найден' });
         res.json({ success: true, product });
     } catch (e) { res.status(500).json({ error: 'Ошибка' }); }
@@ -466,13 +466,13 @@ app.get('/api/init-db', async (req, res) => {
             id SERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'client' CHECK(role IN ('admin','manager','client','partner')),
             company_name TEXT, contact_person TEXT, phone TEXT, address TEXT,
-            is_active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_login TIMESTAMP, created_by INTEGER
         )`);
         await pool.query(`CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY, guid TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
             manufacturer TEXT, category TEXT, price DECIMAL(10,2) NOT NULL DEFAULT 0,
-            stock INTEGER NOT NULL DEFAULT 0, description TEXT, is_active INTEGER DEFAULT 1,
+            stock INTEGER NOT NULL DEFAULT 0, description TEXT, is_active BOOLEAN DEFAULT true,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, synced_at TIMESTAMP
         )`);
         await pool.query(`CREATE TABLE IF NOT EXISTS orders (
@@ -530,7 +530,7 @@ app.get('/api/init-db', async (req, res) => {
         const admin = await dbGet("SELECT id FROM users WHERE email = 'admincp'");
         if (!admin) {
             const hash = await bcrypt.hash('#wtkm999$', 12);
-            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, is_active) VALUES (?, ?, 'admin', 'CuratioPharm', 'Super Administrator', 1)", ['admincp', hash]);
+            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, is_active) VALUES (?, ?, 'admin', 'CuratioPharm', 'Super Administrator', true)", ['admincp', hash]);
         }
 
         // Seed products
@@ -557,7 +557,7 @@ app.get('/api/init-db', async (req, res) => {
         const client = await dbGet("SELECT id FROM users WHERE email = 'client1@apteka1.uz'");
         if (!client) {
             const hash = await bcrypt.hash('Client2024!', 12);
-            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active) VALUES (?, ?, 'client', 'Аптека №1', 'Тошкент Фармация', '+998 71 123-45-67', 1)", ['client1@apteka1.uz', hash]);
+            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active) VALUES (?, ?, 'client', 'Аптека №1', 'Тошкент Фармация', '+998 71 123-45-67', true)", ['client1@apteka1.uz', hash]);
             // Add debt for client
             const u = await dbGet("SELECT id FROM users WHERE email = 'client1@apteka1.uz'");
             if (u) await dbRun('INSERT INTO debts (user_id, amount, credit_limit) VALUES (?, 4500000, 10000000)', [u.id]);
@@ -574,7 +574,7 @@ app.get('/api/init-db', async (req, res) => {
             const ex = await dbGet('SELECT id FROM users WHERE email = ?', [c[0]]);
             if (!ex) {
                 const hash = await bcrypt.hash(c[1], 12);
-                await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active) VALUES (?, ?, 'client', ?, ?, ?, 1)", [c[0], hash, c[2], c[3], c[4]]);
+                await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active) VALUES (?, ?, 'client', ?, ?, ?, true)", [c[0], hash, c[2], c[3], c[4]]);
             }
         }
 
