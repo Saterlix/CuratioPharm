@@ -531,10 +531,12 @@ app.get('/api/init-db', async (req, res) => {
         )`);
 
         // Seed admin
-        const admin = await dbGet("SELECT id FROM users WHERE email = 'admincp'");
+        // Seed admin (DEMO MODE)
+        const admin = await dbGet("SELECT id FROM users WHERE email = 'test'");
         if (!admin) {
-            const hash = await bcrypt.hash('#wtkm999$', 12);
-            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, is_active) VALUES (?, ?, 'admin', 'CuratioPharm', 'Super Administrator', true)", ['admincp', hash]);
+            // Hash for 'test123'
+            const hash = await bcrypt.hash('test123', 12);
+            await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, is_active) VALUES (?, ?, 'admin', 'CuratioPharm Demo', 'Test Administrator', true)", ['test', hash]);
         }
 
         // Seed products

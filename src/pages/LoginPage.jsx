@@ -143,7 +143,7 @@ const LoginPage = () => {
                                 </div>
 
                                 <p className="login-demo-hint">
-                                    Демо: demo@apteka.uz / Demo2024!
+                                    Демо: test / test123
                                 </p>
                             </form>
                         </div>
