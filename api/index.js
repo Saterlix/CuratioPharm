@@ -171,7 +171,10 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
                 totalProducts: totalProducts?.count || 0
             }
         });
-    } catch (e) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (e) {
+        console.error('Stats Error:', e);
+        res.status(500).json({ error: 'Ошибка сервера: ' + e.message, details: e.stack });
+    }
 });
 
 // Admin users CRUD
@@ -179,7 +182,10 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
     try {
         const users = await dbAll("SELECT id, email, company_name, contact_person, phone, is_active, created_at, last_login FROM users WHERE role IN ('partner','client','manager') ORDER BY created_at DESC");
         res.json({ users: users.map(u => ({ id: u.id, email: u.email, companyName: u.company_name, contactPerson: u.contact_person, phone: u.phone, isActive: !!u.is_active, createdAt: u.created_at, lastLogin: u.last_login })) });
-    } catch (e) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (e) {
+        console.error('Users Error:', e);
+        res.status(500).json({ error: 'Ошибка сервера: ' + e.message, details: e.stack });
+    }
 });
 
 app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
@@ -228,7 +234,10 @@ app.get('/api/admin/products', authenticateToken, requireAdmin, async (req, res)
     try {
         const products = await dbAll('SELECT * FROM products ORDER BY name ASC');
         res.json({ products });
-    } catch (e) { res.status(500).json({ error: 'Ошибка' }); }
+    } catch (e) {
+        console.error('Products Error:', e);
+        res.status(500).json({ error: 'Ошибка сервера: ' + e.message, details: e.stack });
+    }
 });
 
 app.post('/api/admin/products', authenticateToken, requireAdmin, async (req, res) => {
