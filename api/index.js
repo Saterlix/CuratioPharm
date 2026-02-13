@@ -525,6 +525,10 @@ app.get('/api/init-db', async (req, res) => {
             target_user_id INTEGER, details TEXT, ip_address TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
+        await pool.query(`CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT PRIMARY KEY, value TEXT, description TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
 
         // Seed admin
         const admin = await dbGet("SELECT id FROM users WHERE email = 'admincp'");
