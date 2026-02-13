@@ -31,19 +31,18 @@ const AdminPage = () => {
     const { isAuthenticated, isAdmin, user, logout } = useAuth();
     const navigate = useNavigate();
 
+    // State
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
-    const [products, setProducts] = useState([]);
     const [stats, setStats] = useState(null);
-    const [activeTab, setActiveTab] = useState('users'); // 'users' or 'catalog'
-    
-    // Search & Filter
+
+    // Search
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     // Modals
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showProductModal, setShowProductModal] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null); // For details popup
+
 
     // Messages
     const [error, setError] = useState('');
@@ -57,58 +56,35 @@ const AdminPage = () => {
         contactPerson: '',
         phone: '',
         address: '',
-        role: 'client' // client, manager, hr
+        role: 'client' // client, admin, developer
     });
 
-    const [productForm, setProductForm] = useState({
-        name: '',
-        manufacturer: '',
-        price: '',
-        stock: '',
-        category: ''
-    });
 
-    // Permissions
-    const canManageUsers = user?.role === 'admin' || user?.role === 'hr';
-    const canManageCatalog = user?.role === 'admin' || user?.role === 'manager';
 
     // Check admin access
     useEffect(() => {
         if (!isAuthenticated || !isAdmin) {
             navigate('/login');
-        } else {
-            // Set initial tab based on permissions
-            if (!canManageUsers && canManageCatalog) {
-                setActiveTab('catalog');
-            }
         }
-    }, [isAuthenticated, isAdmin, navigate, canManageUsers, canManageCatalog]);
+    }, [isAuthenticated, isAdmin, navigate]);
 
     // Load data
     useEffect(() => {
         if (isAdmin) {
             loadData();
         }
-    }, [isAdmin, activeTab]);
+    }, [isAdmin]);
 
     const loadData = async () => {
         setLoading(true);
         try {
-            const promises = [adminAPI.getStats()];
-            
-            if (activeTab === 'users' && canManageUsers) {
-                promises.push(adminAPI.getUsers());
-            } else if (activeTab === 'catalog' && canManageCatalog) {
-                promises.push(adminAPI.getProducts());
-            }
+            const [statsRes, usersRes] = await Promise.all([
+                adminAPI.getStats(),
+                adminAPI.getUsers()
+            ]);
 
-            const results = await Promise.all(promises);
-            setStats(results[0].stats);
-
-            if (results[1]) {
-                if (activeTab === 'users') setUsers(results[1].users || []);
-                if (activeTab === 'catalog') setProducts(results[1].products || []);
-            }
+            setStats(statsRes.stats);
+            setUsers(usersRes.users || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -152,54 +128,6 @@ const AdminPage = () => {
         }
     };
 
-    // Product Actions
-    const handleSaveProduct = async (e) => {
-        e.preventDefault();
-        setError('');
-        try {
-            if (editingProduct) {
-                await adminAPI.updateProduct(editingProduct.id, productForm);
-                setSuccessMessage('Товар обновлен');
-            } else {
-                await adminAPI.createProduct(productForm);
-                setSuccessMessage('Товар добавлен');
-            }
-            setShowProductModal(false);
-            setEditingProduct(null);
-            setProductForm({ name: '', manufacturer: '', price: '', stock: '', category: '' });
-            loadData();
-            setTimeout(() => setSuccessMessage(''), 3000);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
-
-    const openProductModal = (product = null) => {
-        if (product) {
-            setEditingProduct(product);
-            setProductForm({
-                name: product.name,
-                manufacturer: product.manufacturer,
-                price: product.price,
-                stock: product.stock,
-                category: product.category
-            });
-        } else {
-            setEditingProduct(null);
-            setProductForm({ name: '', manufacturer: '', price: '', stock: '', category: '' });
-        }
-        setShowProductModal(true);
-    };
-
-    const handleToggleProductActive = async (productId, currentState) => {
-        try {
-            await adminAPI.updateProduct(productId, { isActive: !currentState });
-            loadData();
-        } catch (err) {
-            setError(err.message);
-        }
-    };
-
     const handleLogout = () => {
         logout();
         navigate('/');
@@ -212,43 +140,16 @@ const AdminPage = () => {
         u.role?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const filteredProducts = products.filter(p => 
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
 
     const getRoleBadge = (role) => {
-        switch(role) {
+        switch (role) {
             case 'admin':
-                return (
-                    <span className="role-badge admin">
-                        <Shield size={14} /> Администратор
-                    </span>
-                );
-            case 'manager':
-                return (
-                    <span className="role-badge manager">
-                        <LayoutGrid size={14} /> Менеджер
-                    </span>
-                );
-            case 'hr':
-                return (
-                    <span className="role-badge partner">
-                        <Users size={14} /> HR
-                    </span>
-                );
-            case 'partner':
-                return (
-                    <span className="role-badge partner">
-                        <Users size={14} /> Партнер
-                    </span>
-                );
+                return <span className="role-badge admin"><Shield size={14} /> Администратор</span>;
+            case 'developer':
+                return <span className="role-badge manager"><Activity size={14} /> Разработчик</span>;
             default:
-                return (
-                    <span className="role-badge client">
-                        <Users size={14} /> Клиент
-                    </span>
-                );
+                return <span className="role-badge client"><Users size={14} /> Клиент</span>;
         }
     };
 
@@ -276,12 +177,7 @@ const AdminPage = () => {
                             <div className="admin-header-actions">
                                 <div className="admin-user-info">
                                     <span className="admin-email">{user?.email}</span>
-                                    <span className="admin-role-chip">
-                                        {user?.role === 'admin' && 'Администратор'}
-                                        {user?.role === 'manager' && 'Менеджер'}
-                                        {user?.role === 'hr' && 'HR'}
-                                        {user?.role === 'partner' && 'Партнер'}
-                                    </span>
+                                    <span className="admin-role-chip">Администратор</span>
                                 </div>
                                 <button onClick={handleLogout} className="admin-logout-btn">
                                     <LogOut size={18} />
@@ -324,25 +220,12 @@ const AdminPage = () => {
                         {successMessage && <div className="admin-success">{successMessage}</div>}
 
                         {/* Tabs */}
+                        {/* Tabs Removed - Only Users */}
                         <div className="admin-tabs">
-                            {canManageUsers && (
-                                <button 
-                                    className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('users')}
-                                >
-                                    <Users size={18} />
-                                    Пользователи
-                                </button>
-                            )}
-                            {canManageCatalog && (
-                                <button 
-                                    className={`admin-tab ${activeTab === 'catalog' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('catalog')}
-                                >
-                                    <LayoutGrid size={18} />
-                                    Каталог
-                                </button>
-                            )}
+                            <button className="admin-tab active">
+                                <Users size={18} />
+                                Пользователи
+                            </button>
                         </div>
 
                         {/* Toolbar */}
@@ -351,7 +234,7 @@ const AdminPage = () => {
                                 <Search size={18} />
                                 <input
                                     type="text"
-                                    placeholder={activeTab === 'users' ? "Поиск пользователей..." : "Поиск товаров..."}
+                                    placeholder="Поиск пользователей..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -359,20 +242,11 @@ const AdminPage = () => {
                             <button onClick={loadData} className="refresh-btn" title="Обновить">
                                 <RefreshCw size={18} />
                             </button>
-                            
-                            {activeTab === 'users' && canManageUsers && (
-                                <button onClick={() => setShowCreateModal(true)} className="create-btn">
-                                    <UserPlus size={18} />
-                                    Добавить пользователя
-                                </button>
-                            )}
 
-                            {activeTab === 'catalog' && canManageCatalog && (
-                                <button onClick={() => openProductModal()} className="create-btn">
-                                    <Plus size={18} />
-                                    Добавить товар
-                                </button>
-                            )}
+                            <button onClick={() => setShowCreateModal(true)} className="create-btn">
+                                <UserPlus size={18} />
+                                Добавить пользователя
+                            </button>
                         </div>
 
                         {/* Content */}
@@ -383,110 +257,65 @@ const AdminPage = () => {
                             </div>
                         ) : (
                             <div className="admin-table-wrapper">
-                                {activeTab === 'users' && canManageUsers && (
-                                    <table className="users-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Роль</th>
-                                                <th>Компания / Имя</th>
-                                                <th>Email</th>
-                                                <th>Контакты</th>
-                                                <th>Статус</th>
-                                                <th>Действия</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredUsers.length === 0 ? (
-                                                <tr><td colSpan="6" className="empty-state">Пользователи не найдены</td></tr>
-                                            ) : (
-                                                filteredUsers.map(u => (
-                                                    <tr key={u.id}>
-                                                        <td>{getRoleBadge(u.role)}</td>
-                                                        <td>
-                                                            <div className="user-name">{u.companyName}</div>
-                                                            {u.contactPerson && <div className="user-sub">{u.contactPerson}</div>}
-                                                        </td>
-                                                        <td>{u.email}</td>
-                                                        <td>{u.phone || '-'}</td>
-                                                        <td>
-                                                            <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
-                                                                {u.isActive ? 'Активен' : 'Отключен'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="actions-cell">
-                                                            <button
-                                                                onClick={() => handleToggleUserActive(u.id, u.isActive)}
-                                                                className={`action-btn ${u.isActive ? 'deactivate' : 'activate'}`}
-                                                                title={u.isActive ? 'Отключить' : 'Включить'}
-                                                            >
-                                                                {u.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteUser(u.id)}
-                                                                className="action-btn delete"
-                                                                title="Удалить"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                )}
+                                <table className="users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Роль</th>
+                                            <th>Компания / Имя</th>
+                                            <th>Email</th>
+                                            <th>Контакты</th>
+                                            <th>Статус</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredUsers.length === 0 ? (
+                                            <tr><td colSpan="6" className="empty-state">Пользователи не найдены</td></tr>
+                                        ) : (
+                                            filteredUsers.map(u => (
+                                                <tr key={u.id}>
+                                                    <td>{getRoleBadge(u.role)}</td>
+                                                    <td>
+                                                        <div className="user-name">{u.companyName}</div>
+                                                        {u.contactPerson && <div className="user-sub">{u.contactPerson}</div>}
+                                                    </td>
+                                                    <td>{u.email}</td>
+                                                    <td>{u.phone || '-'}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
+                                                            {u.isActive ? 'Активен' : 'Отключен'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="actions-cell">
+                                                        <button
+                                                            className="action-btn edit"
+                                                            onClick={() => setSelectedUser(u)}
+                                                            title="Подробнее"
+                                                        >
+                                                            <Eye size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleToggleUserActive(u.id, u.isActive)}
+                                                            className={`action-btn ${u.isActive ? 'deactivate' : 'activate'}`}
+                                                            title={u.isActive ? 'Отключить' : 'Включить'}
+                                                        >
+                                                            {u.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteUser(u.id)}
+                                                            className="action-btn delete"
+                                                            title="Удалить"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
 
-                                {activeTab === 'catalog' && canManageCatalog && (
-                                    <table className="users-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Наименование</th>
-                                                <th>Категория</th>
-                                                <th>Производитель</th>
-                                                <th>Цена</th>
-                                                <th>Остаток</th>
-                                                <th>Статус</th>
-                                                <th>Действия</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredProducts.length === 0 ? (
-                                                <tr><td colSpan="7" className="empty-state">Товары не найдены</td></tr>
-                                            ) : (
-                                                filteredProducts.map(p => (
-                                                    <tr key={p.id}>
-                                                        <td className="company-cell">{p.name}</td>
-                                                        <td><span className="category-tag">{p.category}</span></td>
-                                                        <td>{p.manufacturer}</td>
-                                                        <td>{Number(p.price).toLocaleString()} сум</td>
-                                                        <td>{p.stock}</td>
-                                                        <td>
-                                                            <span className={`status-badge ${p.isActive ? 'active' : 'inactive'}`}>
-                                                                {p.isActive ? 'В продаже' : 'Скрыт'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="actions-cell">
-                                                            <button
-                                                                onClick={() => openProductModal(p)}
-                                                                className="action-btn edit"
-                                                                title="Редактировать"
-                                                            >
-                                                                <Edit size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleToggleProductActive(p.id, p.isActive)}
-                                                                className={`action-btn ${p.isActive ? 'deactivate' : 'activate'}`}
-                                                                title={p.isActive ? 'Скрыть' : 'Показать'}
-                                                            >
-                                                                {p.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                )}
+
                             </div>
                         )}
                     </div>
@@ -503,15 +332,14 @@ const AdminPage = () => {
                             <form onSubmit={handleCreateUser} className="modal-form">
                                 <div className="form-group">
                                     <label>Роль доступа *</label>
-                                    <select 
-                                        value={newUser.role} 
-                                        onChange={e => setNewUser({...newUser, role: e.target.value})}
+                                    <select
+                                        value={newUser.role}
+                                        onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                                         className="role-select"
                                     >
-                                        <option value="client">Клиент (Аптека/Дистрибьютор)</option>
-                                        <option value="manager">Менеджер (Управление каталогом)</option>
-                                        <option value="hr">HR (Управление персоналом)</option>
-                                        <option value="admin">Администратор (Полный доступ)</option>
+                                        <option value="client">Клиент</option>
+                                        <option value="developer">Разработчик</option>
+                                        <option value="admin">Администратор</option>
                                     </select>
                                 </div>
                                 <div className="form-row">
@@ -573,72 +401,44 @@ const AdminPage = () => {
                     </div>
                 )}
 
-                {/* Product Modal */}
-                {showProductModal && (
-                    <div className="modal-overlay" onClick={() => setShowProductModal(false)}>
+
+                {/* User Details Modal */}
+                {selectedUser && (
+                    <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
                         <div className="modal" onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h3>{editingProduct ? 'Редактировать товар' : 'Новый товар'}</h3>
-                                <button onClick={() => setShowProductModal(false)} className="close-btn"><X size={24} /></button>
+                                <h3>Информация о пользователе</h3>
+                                <button onClick={() => setSelectedUser(null)} className="close-btn"><X size={24} /></button>
                             </div>
-                            <form onSubmit={handleSaveProduct} className="modal-form">
-                                <div className="form-group">
-                                    <label>Наименование *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={productForm.name}
-                                        onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                                        placeholder="Название препарата"
-                                    />
+                            <div className="modal-body user-details">
+                                <div className="detail-row">
+                                    <strong>ID:</strong> <span>{selectedUser.id}</span>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Категория</label>
-                                        <input
-                                            type="text"
-                                            value={productForm.category}
-                                            onChange={e => setProductForm({ ...productForm, category: e.target.value })}
-                                            placeholder="Например: Антибиотики"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Производитель</label>
-                                        <input
-                                            type="text"
-                                            value={productForm.manufacturer}
-                                            onChange={e => setProductForm({ ...productForm, manufacturer: e.target.value })}
-                                            placeholder="Завод изготовитель"
-                                        />
-                                    </div>
+                                <div className="detail-row">
+                                    <strong>Роль:</strong> <span>{getRoleBadge(selectedUser.role)}</span>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Цена (сум) *</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={productForm.price}
-                                            onChange={e => setProductForm({ ...productForm, price: e.target.value })}
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Остаток *</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={productForm.stock}
-                                            onChange={e => setProductForm({ ...productForm, stock: e.target.value })}
-                                            placeholder="0"
-                                        />
-                                    </div>
+                                <div className="detail-row">
+                                    <strong>Email:</strong> <span>{selectedUser.email}</span>
                                 </div>
-                                <div className="modal-actions">
-                                    <button type="button" onClick={() => setShowProductModal(false)} className="btn-cancel">Отмена</button>
-                                    <button type="submit" className="btn-create"><Check size={18} /> Сохранить</button>
+                                <div className="detail-row">
+                                    <strong>Компания:</strong> <span>{selectedUser.companyName}</span>
                                 </div>
-                            </form>
+                                <div className="detail-row">
+                                    <strong>Контакт:</strong> <span>{selectedUser.contactPerson}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <strong>Телефон:</strong> <span>{selectedUser.phone}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <strong>Адрес:</strong> <span>{selectedUser.address || '-'}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <strong>Регистрация:</strong> <span>{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <strong>Последний вход:</strong> <span>{selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString() : 'Никогда'}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

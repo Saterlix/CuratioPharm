@@ -72,6 +72,8 @@ const AdminLoginPage = () => {
                                         placeholder="Admincp"
                                         required
                                         disabled={loading}
+                                        autoComplete="new-password"
+                                        name="admin_login_random"
                                     />
                                 </div>
 
@@ -87,6 +89,8 @@ const AdminLoginPage = () => {
                                         placeholder="Введите пароль"
                                         required
                                         disabled={loading}
+                                        autoComplete="new-password"
+                                        name="admin_password_random"
                                     />
                                 </div>
 
@@ -102,6 +106,8 @@ const AdminLoginPage = () => {
                                         placeholder="Секретный ключ администратора"
                                         required
                                         disabled={loading}
+                                        autoComplete="new-password"
+                                        name="admin_key_random"
                                     />
                                 </div>
 

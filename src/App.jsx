@@ -15,7 +15,8 @@ import {
   ProductCatalogPage,
   ShoppingCartPage,
   OrderHistoryPage,
-  Footer
+  Footer,
+  DeveloperPage
 } from './pages';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/cooperation" element={<CooperationPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/cabinet" element={<CabinetPage />} />
+            <Route path="/developer-panel" element={<DeveloperPage />} />
             <Route path="/catalog" element={<ProductCatalogPage />} />
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/orders" element={<OrderHistoryPage />} />

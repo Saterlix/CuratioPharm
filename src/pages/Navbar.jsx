@@ -48,15 +48,17 @@ const Navbar = () => {
     // Opacity для фона - начинает исчезать только после 70% скролла
     const bgOpacity = scrollProgress < 0.7 ? 1 : 1 - ((scrollProgress - 0.7) / 0.3);
 
-    // Falling Petals Generation
-    const petals = useMemo(() => {
-        return [...Array(50)].map((_, i) => ({
-            i,
-            left: Math.random() * 100, // 0-100% width
-            animationDuration: 10 + Math.random() * 10, // 10-20s fall time
-            animationDelay: Math.random() * -20, // start at different times
-            opacity: 0.3 + Math.random() * 0.5,
-            size: 5 + Math.random() * 8
+    // Pre-compute particle data ONCE so they don't re-randomize on every render
+    const leafParticles = useMemo(() => {
+        const count = typeof window !== 'undefined' && window.innerWidth < 768 ? 15 : 30;
+        return [...Array(count)].map((_, i) => ({
+            id: i,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 15}s`,   // stagger over full 15s cycle
+            animationDuration: `${12 + Math.random() * 8}s`, // 12-20s
+            opacity: 0.3 + Math.random() * 0.4,
+            className: `leaf-particle leaf-${i % 3}`
         }));
     }, []);
 
@@ -75,6 +77,7 @@ const Navbar = () => {
                 className={`navbar ${isFullyCollapsed || !isHomePage ? 'scrolled' : ''} ${isHomePage ? 'hero-navbar' : ''}`}
                 style={{
                     height: isHomePage ? `${currentHeight}px` : `${minHeight}px`,
+                    overflow: 'hidden', // КРИТИЧНО: ничего не должно выходить за край навбара
                 }}
             >
                 {/* Hero Background - Only on Home Page */}
@@ -82,7 +85,11 @@ const Navbar = () => {
                     <>
                         <div
                             className="navbar-animated-bg"
-                            style={{ opacity: bgOpacity }}
+                            style={{
+                                opacity: bgOpacity,
+                                height: `${maxHeight}px`, // Фиксируем высоту! Не зависит от сжатия навбара
+                                top: 0,
+                            }}
                             aria-hidden="true"
                         >
                             {/* Animated Logo Container */}
@@ -99,23 +106,20 @@ const Navbar = () => {
                                 <div
                                     className="leaf-particles"
                                     style={{
-                                        /* Disable parallax on mobile to prevent scroll lag */
-                                        transform: typeof window !== 'undefined' && window.innerWidth > 768
-                                            ? `translateY(${scrollProgress * (maxHeight - minHeight) * 0.5}px)`
-                                            : 'none',
+                                        /* Убрали параллакс - он сдвигал контейнер за пределы навбара */
                                         opacity: Math.max(0, 1 - scrollProgress * 1.5)
                                     }}
                                 >
-                                    {[...Array(typeof window !== 'undefined' && window.innerWidth < 768 ? 15 : 30)].map((_, i) => (
+                                    {leafParticles.map((p) => (
                                         <div
-                                            key={i}
-                                            className={`leaf-particle leaf-${i % 3}`}
+                                            key={p.id}
+                                            className={p.className}
                                             style={{
-                                                left: `${Math.random() * 100}%`,
-                                                top: `${Math.random() * 100}%`,
-                                                animationDelay: `${Math.random() * 5}s`,
-                                                animationDuration: `${10 + Math.random() * 10}s`,
-                                                opacity: 0.3 + Math.random() * 0.4
+                                                left: p.left,
+                                                top: p.top,
+                                                animationDelay: p.animationDelay,
+                                                animationDuration: p.animationDuration,
+                                                opacity: p.opacity
                                             }}
                                         ></div>
                                     ))}

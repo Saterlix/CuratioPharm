@@ -15,10 +15,18 @@ const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'AdminAccess@2024';
 const DATABASE_URL = process.env.DATABASE_URL;
 
 // --- DB ---
+// --- DB ---
 const pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 5000 // 5s timeout
 });
+
+// Verify connection on startup (log only)
+pool.connect().then(client => {
+    console.log('✅ Connected to Database');
+    client.release();
+}).catch(e => console.error('❌ Database Connection Error:', e.message));
 
 // SQL helper: convert ? to $1,$2,...
 const q = (sql, params = []) => {
@@ -29,6 +37,25 @@ const q = (sql, params = []) => {
 const dbRun = async (sql, params = []) => { const r = await q(sql, params); return { lastID: 0, changes: r.rowCount }; };
 const dbGet = async (sql, params = []) => { const r = await q(sql, params); return r.rows[0]; };
 const dbAll = async (sql, params = []) => { const r = await q(sql, params); return r.rows; };
+
+// Test DB Endpoint
+app.get('/api/test-db', async (req, res) => {
+    try {
+        if (!DATABASE_URL) throw new Error('DATABASE_URL is not defined');
+        const result = await pool.query('SELECT NOW() as now');
+        res.json({
+            status: 'ok',
+            time: result.rows[0].now,
+            message: '✅ Connection to Neon DB successful!'
+        });
+    } catch (e) {
+        res.status(500).json({
+            status: 'error',
+            message: '❌ Database connection failed',
+            error: e.message
+        });
+    }
+});
 
 // --- MIDDLEWARE ---
 app.use(cors({ origin: '*', credentials: true }));

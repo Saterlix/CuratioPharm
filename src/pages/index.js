@@ -1,5 +1,3 @@
-export { default as Navbar } from './Navbar';
-export { default as Footer } from './Footer';
 export { default as HomePage } from './HomePage';
 export { default as AboutPage } from './AboutPage';
 export { default as ProductsPage } from './ProductsPage';
@@ -13,4 +11,5 @@ export { default as AdminLoginPage } from './AdminLoginPage';
 export { default as ProductCatalogPage } from './ProductCatalogPage';
 export { default as ShoppingCartPage } from './ShoppingCartPage';
 export { default as OrderHistoryPage } from './OrderHistoryPage';
-
+export { default as Footer } from './Footer';
+export { default as DeveloperPage } from './DeveloperPage';

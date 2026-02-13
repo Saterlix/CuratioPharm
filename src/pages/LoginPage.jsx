@@ -12,15 +12,21 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const { login: loginUser, isAuthenticated, loading: authLoading } = useAuth();
+    const { login: loginUser, isAuthenticated, user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
 
     // If already logged in, redirect to cabinet
     React.useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/cabinet');
+        if (isAuthenticated && user) {
+            if (user.role === 'admin') {
+                navigate('/cp-admin-panel');
+            } else if (user.role === 'developer') {
+                navigate('/developer-panel');
+            } else {
+                navigate('/cabinet');
+            }
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, user, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -73,7 +79,7 @@ const LoginPage = () => {
                                 <p>Введите логин и пароль для входа</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="login-form">
+                            <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
                                 {error && (
                                     <div className="login-error">
                                         {error}
@@ -92,6 +98,8 @@ const LoginPage = () => {
                                         placeholder="demo@apteka.uz"
                                         required
                                         disabled={loading}
+                                        autoComplete="new-password"
+                                        name="login_field_random"
                                     />
                                 </div>
 
@@ -107,6 +115,8 @@ const LoginPage = () => {
                                         placeholder="Введите пароль"
                                         required
                                         disabled={loading}
+                                        autoComplete="new-password"
+                                        name="password_field_random"
                                     />
                                 </div>
 

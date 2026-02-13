@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 // API URL: same domain on Vercel, or localhost in dev
-const API_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// API URL: Use relative /api in production (Vercel), or env var in dev
+const API_URL = import.meta.env.PROD
+    ? '/api'
+    : (import.meta.env.VITE_API_BASE_URL || '/api');
 
 const api = axios.create({
     baseURL: API_URL,
@@ -274,6 +277,33 @@ export const cabinetAPI = {
     async getCertificates(productId) {
         const response = await api.get('/cabinet/certificates', { params: { productId } });
         return response.data;
+    }
+};
+
+export const developerAPI = {
+    // Получить настройки (токены и т.д.)
+    async getSettings() {
+        return callApi({ method: 'get', url: '/admin/settings', action: 'Не удалось получить настройки' });
+    },
+
+    // Обновить настройки
+    async updateSettings(settings) {
+        return callApi({ method: 'put', url: '/admin/settings', data: { settings }, action: 'Не удалось сохранить настройки' });
+    },
+
+    // Получить пользователей (для разработчика тоже нужен список)
+    async getUsers(role) {
+        return callApi({ method: 'get', url: '/admin/users', params: { role }, action: 'Не удалось загрузить пользователей' });
+    },
+
+    // Получить системную информацию
+    async getSystemInfo() {
+        return callApi({ method: 'get', url: '/admin/system-info', action: 'Не удалось загрузить системную информацию' });
+    },
+
+    // Получить логи
+    async getLogs() {
+        return callApi({ method: 'get', url: '/admin/logs', action: 'Не удалось загрузить логи' });
     }
 };
 

@@ -6,11 +6,21 @@ $nav-text: #1e293b;
 $nav-highlight: #10b981;
 $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
-/* Spacer для контента под навбаром */
+/* Основные настройки для фиксации краев */
+body,
+html {
+    overflow-x: hidden;
+    /* Запрещаем горизонтальный скролл на уровне страницы */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 .navbar-spacer {
     display: block;
     width: 100%;
-    /* Match hero bottom edge color */
+    /* Фон спейсера = цвет нижнего края hero, чтобы не было видно серого фона main */
+    background: #022c22;
 }
 
 /* Fixed Navbar с видео */
@@ -22,8 +32,10 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     z-index: 1000;
     background: transparent;
     color: white;
-    /* overflow: hidden; REMOVED to allow mobile menu to slide out */
-    transition: background 0.3s ease, height 0.3s ease;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+
+    /* Оптимизация для плавности */
+    will-change: background, backdrop-filter, box-shadow;
 
     /* Hero режим - большой навбар с видео */
     &.hero-navbar {
@@ -37,8 +49,12 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 
     &.scrolled {
         background: var(--nav-bg-scrolled, rgba(0, 0, 0, 0.85));
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+
+        /* Убираем тяжелый блюр на слабых устройствах, если лагает, 
+           но оставляем для красоты. Можно уменьшить px для производительности */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
         box-shadow: $nav-shadow;
 
         .navbar-logo .logo-text {
@@ -79,6 +95,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     transition: opacity 0.3s ease;
     background: radial-gradient(circle at 50% 50%, #0f766e 0%, #064e3b 60%, #022c22 100%);
     overflow: hidden;
+    /* Важно: обрезает всё, что внутри */
 }
 
 /* Container */
@@ -93,6 +110,8 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     justify-content: center;
     z-index: 5;
     pointer-events: none;
+    overflow: hidden;
+    /* КРИТИЧНО: Чтобы частицы не ломали верстку */
 }
 
 .logo-wrapper {
@@ -100,13 +119,37 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     width: 350px;
     max-width: 80vw;
     animation: logoFloat 6s ease-in-out infinite;
+    will-change: transform;
+    /* Оптимизация */
 }
 
 .hero-logo-img {
     width: 100%;
     height: auto;
-    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.4));
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+    /* Упростили тень */
     display: block;
+    will-change: filter;
+    animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 30px rgba(16, 230, 150, 0.9));
+        /* Яркое свечение */
+        transform: scale(1.02);
+        /* Легкое увеличение */
+    }
+
+    100% {
+        filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+        transform: scale(1);
+    }
 }
 
 /* Floating Leaf Particles */
@@ -118,6 +161,8 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     height: 100%;
     pointer-events: none;
     z-index: 4;
+    overflow: hidden;
+    /* Дополнительная защита */
 }
 
 .leaf-particle {
@@ -125,9 +170,17 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     width: 15px;
     height: 15px;
     background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
-    opacity: 0.6;
-    animation: leafFloat linear infinite;
-    box-shadow: 0 0 5px rgba(22, 163, 74, 0.4);
+    opacity: 0;
+    /* Fix: Скрываем до начала анимации (чтобы не висели во время delay) */
+
+    /* ДОБАВЛЕНО ВРЕМЯ: 15s. Теперь они будут летать плавно, а не бешенно */
+    animation: leafFloat 15s linear infinite;
+
+    /* Оптимизация: сообщаем браузеру, что будет меняться */
+    will-change: transform, opacity;
+
+    /* Упростили тень */
+    box-shadow: 0 0 2px rgba(22, 163, 74, 0.4);
 }
 
 /* Different Leaf Shapes */
@@ -150,7 +203,7 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
 
 @keyframes leafFloat {
     0% {
-        transform: translateY(100vh) rotate(0deg) translateX(0);
+        transform: translateY(110vh) rotate(0deg) translateX(0);
         opacity: 0;
     }
 
@@ -159,11 +212,11 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
     }
 
     33% {
-        transform: translateY(60vh) rotate(120deg) translateX(30px);
+        transform: translateY(60vh) rotate(120deg) translateX(20px);
     }
 
     66% {
-        transform: translateY(30vh) rotate(240deg) translateX(-30px);
+        transform: translateY(30vh) rotate(240deg) translateX(-20px);
     }
 
     90% {
@@ -399,8 +452,8 @@ $nav-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.0
         height: calc(100vh - 60px);
         flex-direction: column;
         background: var(--nav-bg-scrolled, rgba(0, 0, 0, 0.95));
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         padding: 40px 20px;
         gap: 2rem;
         transform: translateX(100%);
