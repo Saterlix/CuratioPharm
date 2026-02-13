@@ -190,14 +190,17 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
 
 app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { email, password, companyName, contactPerson, phone } = req.body;
+        const { email, password, companyName, contactPerson, phone, role } = req.body;
         if (!email || !password || !companyName) return res.status(400).json({ error: 'Email, пароль и название компании обязательны' });
         const existing = await dbGet('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
         if (existing) return res.status(400).json({ error: 'Этот email уже используется' });
+        const validRoles = ['admin', 'manager', 'client', 'partner', 'developer'];
+        const userRole = validRoles.includes(role) ? role : 'client'; // Default to client if invalid or not provided
+
         const hash = await bcrypt.hash(password, 12);
-        await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active, created_by) VALUES (?, ?, 'partner', ?, ?, ?, true, ?)",
-            [email.toLowerCase(), hash, companyName, contactPerson || null, phone || null, req.user.id]);
-        res.json({ success: true, message: 'Партнёр создан' });
+        await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active, created_by) VALUES (?, ?, ?, ?, ?, ?, true, ?)",
+            [email.toLowerCase(), hash, userRole, companyName, contactPerson || null, phone || null, req.user.id]);
+        res.json({ success: true, message: 'Пользователь создан' });
     } catch (e) {
         console.error('Create User Error:', e);
         res.status(500).json({ error: 'Ошибка сервера: ' + e.message, details: e.stack });
@@ -590,6 +593,27 @@ app.get('/api/init-db', async (req, res) => {
         res.json({ success: true, message: '✅ Database initialized!' });
     } catch (e) {
         console.error('Init DB error:', e);
+        try {
+            // Attempt auto-fix for constraint
+            if (e.message.includes('users_role_check')) {
+                await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+                await pool.query("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','manager','client','partner','developer'))");
+                res.json({ success: true, message: '✅ Database constraints updated! (users_role_check fixed)' });
+                return;
+            }
+        } catch (ex) {
+            console.error('Fix DB error:', ex);
+        }
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/fix-db', async (req, res) => {
+    try {
+        await pool.query("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+        await pool.query("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','manager','client','partner','developer'))");
+        res.json({ success: true, message: '✅ Database constraints updated!' });
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
