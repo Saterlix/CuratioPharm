@@ -198,7 +198,10 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
         await dbRun("INSERT INTO users (email, password, role, company_name, contact_person, phone, is_active, created_by) VALUES (?, ?, 'partner', ?, ?, ?, true, ?)",
             [email.toLowerCase(), hash, companyName, contactPerson || null, phone || null, req.user.id]);
         res.json({ success: true, message: 'Партнёр создан' });
-    } catch (e) { res.status(500).json({ error: 'Ошибка сервера' }); }
+    } catch (e) {
+        console.error('Create User Error:', e);
+        res.status(500).json({ error: 'Ошибка сервера: ' + e.message, details: e.stack });
+    }
 });
 
 app.put('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
