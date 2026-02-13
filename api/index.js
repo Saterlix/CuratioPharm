@@ -12,23 +12,23 @@ const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'CtP2024@SecureKeyRandom987XyZ';
 const ADMIN_SECRET_URL = process.env.ADMIN_SECRET_URL || 'cp-admin-2024';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'AdminAccess@2024';
+// HARDCODED DATABASE URL (FIX for Vercel)
 const DATABASE_URL = 'postgresql://neondb_owner:npg_s3hFeX1Ruitn@ep-proud-unit-aiqrz3bw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require';
 
-// --- DB ---
 // --- DB ---
 const pool = new Pool({
     connectionString: DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5000 // 5s timeout
+    connectionTimeoutMillis: 5000
 });
 
-// Verify connection on startup (log only)
+// Verify connection on startup
 pool.connect().then(client => {
     console.log('✅ Connected to Database');
     client.release();
 }).catch(e => console.error('❌ Database Connection Error:', e.message));
 
-// SQL helper: convert ? to $1,$2,...
+// SQL helper
 const q = (sql, params = []) => {
     let i = 1;
     const pgSql = sql.replace(/\?/g, () => `$${i++}`);
@@ -40,36 +40,21 @@ const dbAll = async (sql, params = []) => { const r = await q(sql, params); retu
 
 // Test DB Endpoint
 app.get('/api/test-db', async (req, res) => {
-    const maskedUrl = DATABASE_URL ? DATABASE_URL.replace(/:[^:@]*@/, ':****@') : 'undefined';
     try {
-        if (!DATABASE_URL) throw new Error('DATABASE_URL is not defined');
         const result = await pool.query('SELECT NOW() as now');
         res.json({
             status: 'ok',
             time: result.rows[0].now,
-            message: '✅ Connection to Neon DB successful!',
-            debug: {
-                usingUrl: maskedUrl,
-                envUrl: process.env.DATABASE_URL ? 'set' : 'unset',
-                nodeEnv: process.env.NODE_ENV
-            }
+            message: '✅ Connection to Neon DB successful!'
         });
     } catch (e) {
-        res.status(500).json({
-            status: 'error',
-            message: '❌ Database connection failed',
-            error: e.message,
-            stack: e.stack,
-            debug: {
-                usingUrl: maskedUrl,
-                envUrl: process.env.DATABASE_URL ? 'set' : 'unset'
-            }
-        });
+        res.status(500).json({ status: 'error', message: 'Database failed', error: e.message });
     }
 });
 
 // --- MIDDLEWARE ---
-app.use(cors({ origin: '*', credentials: true }));
+// Allow requests from anywhere, but handle credentials correctly
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 const authenticateToken = (req, res, next) => {
